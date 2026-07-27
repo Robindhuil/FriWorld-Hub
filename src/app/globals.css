@@ -1,26 +1,46 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Warm, friendly palette built around the faculty yellow #FBB800 */
+  --color-paper: #fffcf5;
+  --color-surface: #ffffff;
+  --color-ink: #1b1b1b;
+  --color-accent: #fbb800;
+  --color-accent-soft: #fff1c9;
+
+  --font-sans: var(--font-nunito);
+  --font-display: var(--font-fredoka);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-nunito), system-ui, sans-serif;
+}
+
+/* Friendly, unobtrusive scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(27, 27, 27, 0.2) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(27, 27, 27, 0.18);
+  border-radius: 9999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(27, 27, 27, 0.3);
+}
+
+/* Hand-drawn style highlight behind a word */
+.marker {
+  background: linear-gradient(transparent 55%, var(--color-accent) 55%);
+  padding: 0 0.1em;
 }
