@@ -31,6 +31,8 @@ type GameManifest = {
   dataUrl: string;
   frameworkUrl: string;
   codeUrl: string;
+  /** Present only for multithreaded builds. */
+  workerUrl?: string;
   streamingAssetsUrl: string;
 };
 
@@ -53,6 +55,27 @@ const PRODUCT = {
 };
 
 type Status = 'loading' | 'ready' | 'error';
+
+/**
+ * Multithreaded Unity builds need SharedArrayBuffer, which browsers expose only
+ * to secure, cross-origin isolated documents. Unity's own failure message blames
+ * the browser ("does not support multithreading"), but the cause is nearly always
+ * server config — missing COOP/COEP headers, or plain HTTP. Name the real cause
+ * so a broken deploy is obvious instead of looking like a user's browser problem.
+ *
+ * Returns null when multithreading is available.
+ */
+function multithreadingIssue(): string | null {
+  if (typeof SharedArrayBuffer !== 'undefined' && window.crossOriginIsolated) return null;
+
+  if (!window.isSecureContext) {
+    return 'Hra beží len cez zabezpečené pripojenie. Otvor stránku cez https:// a skús to znova.';
+  }
+  if (!window.crossOriginIsolated) {
+    return 'Stránka nie je správne nastavená — chýbajú jej hlavičky COOP/COEP, bez ktorých hra nevie spustiť viacvláknové spracovanie.';
+  }
+  return 'Tvoj prehliadač nepodporuje viacvláknové spracovanie, ktoré hra potrebuje. Skús aktuálnu verziu Chrome, Edge alebo Firefoxu.';
+}
 
 export default function UnityGame() {
   const router = useRouter();
@@ -89,10 +112,22 @@ export default function UnityGame() {
     const startInstance = (manifest: GameManifest) => {
       if (cancelled || !window.createUnityInstance) return;
 
+      // 2) Only multithreaded builds (the ones shipping a worker) need this, so
+      // a single-threaded build still runs on hosts without the COI headers.
+      if (manifest.workerUrl) {
+        const issue = multithreadingIssue();
+        if (issue) {
+          setStatus('error');
+          setMessage(issue);
+          return;
+        }
+      }
+
       const config: Record<string, unknown> = {
         dataUrl: manifest.dataUrl,
         frameworkUrl: manifest.frameworkUrl,
         codeUrl: manifest.codeUrl,
+        ...(manifest.workerUrl ? { workerUrl: manifest.workerUrl } : {}),
         streamingAssetsUrl: manifest.streamingAssetsUrl,
         ...PRODUCT,
         // Cap device pixel ratio so high-DPI screens don't blow the render
