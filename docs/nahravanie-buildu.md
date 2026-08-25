@@ -133,7 +133,58 @@ status: 'Alfa',
 Stránka `/versions` zoradí záznamy podľa dátumu sama, na poradí v poli nezáleží.
 Prvé tri položky najnovšieho záznamu sa zobrazia aj na úvodnej stránke.
 
-Ak k vydaniu patrí aj článok, pridaj ho do `src/content/news.ts`.
+#### Čo písať do `items`
+
+Toto je jediná časť, ktorú hráč z celej verzie naozaj číta, takže sa oplatí
+napísať ju z jeho pohľadu, nie z pohľadu commitov.
+
+- **Píš, čo sa zmenilo v hre**, nie ktorý skript. „Plynulejší pohyb kamery",
+  nie „refactor PlayerLook".
+- **Jedna zmena = jedna položka.** Bez bodky na konci, začni slovesom alebo
+  podstatným menom.
+- **Preskoč vnútorné veci**, ktoré hráč nespozná — presuny súborov, opravy
+  buildu, úpravy komentárov. Ak sa to neprejaví na obrazovke, nepatrí to sem.
+- **Zoskup podľa `kind`.** Nové veci pod `Pridané`, úpravy existujúcich pod
+  `Zmenené`, chyby pod `Opravené`. Prázdne skupiny vôbec neuvádzaj.
+- **`summary` je jedna veta** — objaví sa na úvodnej stránke vedľa čísla verzie,
+  takže má zhrnúť celé vydanie, nie zopakovať prvú položku.
+
+Príklad, ako to vyzerá hotové:
+
+```ts
+summary: 'Vylepšenia stability a ovládania podľa prvej spätnej väzby.',
+changes: [
+  { kind: 'Zmenené', items: ['Plynulejší pohyb kamery', 'Doladené ovládanie pohybu'] },
+  { kind: 'Opravené', items: ['Občasné zaseknutie pri rýchlom vstupe do sveta'] },
+],
+```
+
+#### Väčšie vydanie: aj článok
+
+Pri vydaní, ktoré prináša viac než pár opráv, pridaj záznam do
+`src/content/news.ts`. Changelog odpovedá na „čo sa zmenilo", článok na „prečo
+a čo s tým" — a je to jediné miesto, kde sa dá napísať súvislý text.
+
+```ts
+{
+  slug: 'nazov-v-url',
+  title: 'Nadpis článku',
+  date: '2026-08-04',
+  tag: 'Novinky',              // voľný text, zobrazí sa ako štítok
+  excerpt: 'Jedna-dve vety do prehľadu článkov.',
+  body: [
+    'Odsek textu.',
+    '## Medzinadpis',
+    '- Položka zoznamu',
+  ],
+},
+```
+
+`body` renderuje zjednodušený markdown (`src/components/Prose.tsx`): riadok
+začínajúci `## ` je nadpis, `- ` je odrážka, čokoľvek iné je odsek. Nič ďalšie
+podporované nie je.
+
+Najnovší článok sa automaticky objaví na úvodnej stránke.
 
 Potom commit a push. Vercel nasadí zmenu sám.
 
