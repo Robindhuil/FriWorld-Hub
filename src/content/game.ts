@@ -7,7 +7,7 @@ export const game = {
   description:
     'FriWorld je interaktívna 3D prehliadka Fakulty riadenia a informatiky. Voľne sa prejdeš po vernom modeli fakulty, objavuješ priestory, stretávaš postavy a plníš úlohy. Popritom si cez minihry — vrátane simulovaného programovacieho prostredia — vyskúšaš základy programovania. Bez inštalácie, priamo v prehliadači.',
   studio: 'Fakultu riadenia a informatiky',
-  version: '0.1.0',
+  version: '0.1.1',
   status: 'Alfa',
   // Externé odkazy — nahraď reálnymi URL.
   links: {

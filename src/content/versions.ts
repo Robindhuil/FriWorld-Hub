@@ -13,7 +13,7 @@ export type Version = {
 export const versions: Version[] = [
   {
     version: '0.1.0',
-    date: '2026-06-10',
+    date: '2026-08-03',
     type: 'Vydanie',
     summary: 'Prvá verejná verzia FriWorld — 3D prehliadka fakulty v prehliadači.',
     changes: [
@@ -30,7 +30,7 @@ export const versions: Version[] = [
   },
   {
     version: '0.1.1',
-    date: '2026-06-16',
+    date: '2026-08-04',
     type: 'Patch',
     summary: 'Vylepšenia stability a ovládania podľa prvej spätnej väzby.',
     changes: [
