@@ -34,3 +34,9 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Unity build
+
+The game build lives on Cloudflare R2, not in this repo — see
+[docs/nahravanie-buildu.md](docs/nahravanie-buildu.md) for the routine to follow
+when swapping in a new export from Unity.
