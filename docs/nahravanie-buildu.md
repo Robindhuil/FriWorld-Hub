@@ -101,13 +101,53 @@ Sleduj dve veci:
 - `Content-Type: application/wasm` — ak by tu bolo `application/octet-stream`,
   prehliadač nemôže použiť streamovanú kompiláciu a načítanie je pomalšie
 
-### 6. Otvoriť hru
+### 6. Zapísať verziu na web
+
+Číslo verzie a changelog sú zatiaľ napísané staticky v repozitári, takže sa
+neaktualizujú samé — treba ich pridať ručne k tomu istému buildu.
+
+**`src/content/game.ts`** — číslo verzie zobrazené v hlavičke a v pätičke:
+
+```ts
+version: '0.1.1',
+status: 'Alfa',
+```
+
+**`src/content/versions.ts`** — nový záznam na začiatok poľa `versions`:
+
+```ts
+{
+  version: '0.1.1',
+  date: '2026-08-04',            // ISO, zoradenie ide podľa neho
+  type: 'Patch',                 // 'Vydanie' | 'Patch' | 'Hotfix'
+  summary: 'Krátky popis, čo prináša.',
+  changes: [
+    {
+      kind: 'Pridané',           // 'Pridané' | 'Zmenené' | 'Opravené' | 'Odstránené'
+      items: ['Prvá zmena', 'Druhá zmena'],
+    },
+  ],
+},
+```
+
+Stránka `/versions` zoradí záznamy podľa dátumu sama, na poradí v poli nezáleží.
+Prvé tri položky najnovšieho záznamu sa zobrazia aj na úvodnej stránke.
+
+Ak k vydaniu patrí aj článok, pridaj ho do `src/content/news.ts`.
+
+Potom commit a push. Vercel nasadí zmenu sám.
+
+**Číslo verzie drž rovnaké ako prefix buildu** (`0.1.1-web` a `version: '0.1.1'`).
+Nie je to nikde vynútené, ale keď sa raz niečo pokazí, prefix v adrese je jediné,
+podľa čoho spätne zistíš, ktorý build je vonku.
+
+### 7. Otvoriť hru
 
 Na nasadenej stránke otvor `/api/game`. Musí vrátiť adresy nového buildu a
 `workerUrl: "/api/game/worker"`. Potom `/play`.
 
-Vercel netreba znovu nasadzovať — `GAME_BASE_URL` sa nemení a manifest sa číta
-za behu.
+Samotná výmena buildu redeploy nevyžaduje — `GAME_BASE_URL` sa nemení a manifest
+sa číta za behu. Redeploy prebehne kvôli kroku 6, keďže texty verzií sú v gite.
 
 ---
 
