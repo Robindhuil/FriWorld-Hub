@@ -5,17 +5,17 @@
 // nie stovky.
 
 export const launcher = {
-  version: '0.1.3-alpha',
+  version: '0.1.4-alpha',
 
   // Celý balíček. Obsahuje aj náhradný spôsob spustenia pre prípad, že Windows
   // odmietne spustiť .exe — preto je to hlavná ponuka, nie samotný .exe.
   windowsZip:
-    'https://github.com/Robindhuil/FriWorld-Launcher/releases/download/v0.1.3-alpha/FriWorld-Launcher-0.1.3-alpha-win-x64.zip',
+    'https://github.com/Robindhuil/FriWorld-Launcher/releases/download/v0.1.4-alpha/FriWorld-Launcher-0.1.4-alpha-win-x64.zip',
   windowsZipMb: 60,
 
   // Jeden súbor, bez náhradného spustenia. Pre toho, kto vie, čo robí.
   windowsExe:
-    'https://github.com/Robindhuil/FriWorld-Launcher/releases/download/v0.1.3-alpha/FriWorldLauncher.exe',
+    'https://github.com/Robindhuil/FriWorld-Launcher/releases/download/v0.1.4-alpha/FriWorldLauncher.exe',
   windowsExeMb: 50,
 
   releases: 'https://github.com/Robindhuil/FriWorld-Launcher/releases',
