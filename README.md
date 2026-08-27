@@ -37,6 +37,8 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ## Unity build
 
-The game build lives on Cloudflare R2, not in this repo — see
-[docs/nahravanie-buildu.md](docs/nahravanie-buildu.md) for the routine to follow
-when swapping in a new export from Unity.
+The game build lives on Cloudflare R2, not in this repo. Deploying it — and the
+desktop build alongside it — is one runbook in the launcher repo:
+[docs/deploying.md](https://github.com/Robindhuil/FriWorld-Launcher/blob/master/docs/deploying.md).
+[docs/nahravanie-buildu.md](docs/nahravanie-buildu.md) keeps the R2 addresses and the
+three commands that belong to this repo.
