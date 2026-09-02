@@ -11,6 +11,7 @@ const links = [
   { href: '/versions', label: 'Verzie' },
   { href: '/discussions', label: 'Diskusia' },
   { href: '/about', label: 'O hre' },
+  { href: '/frilens', label: 'FriLens' },
 ];
 
 export default function Navbar() {

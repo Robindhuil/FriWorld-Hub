@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { game } from '@/content/game';
 import { launcher } from '@/content/launcher';
+import { frilens } from '@/content/frilens';
 
 export const metadata: Metadata = {
   title: 'Stiahnuť',
@@ -136,6 +137,28 @@ export default function DownloadPage() {
           className="shrink-0 rounded-full border-[1.5px] border-ink bg-surface px-5 py-2.5 font-display text-sm font-semibold shadow-[3px_3px_0_#1b1b1b] transition hover:bg-ink/5"
         >
           ▶ Hrať v prehliadači
+        </Link>
+      </div>
+
+      {/* FriLens. Samostatná appka, nie hra — preto vlastná karta a nie ďalší riadok
+          v zozname platforiem. */}
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-5 rounded-2xl border-[1.5px] border-ink bg-paper p-7 shadow-[3px_3px_0_#1b1b1b]">
+        <div className="flex items-center gap-4">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-[1.5px] border-ink bg-surface text-2xl">
+            🤖
+          </span>
+          <div>
+            <p className="font-display text-lg font-bold">FriLens pre Android</p>
+            <p className="mt-0.5 text-sm text-ink/55">
+              Navigačná sieť fakulty cez kameru telefónu · {frilens.version}
+            </p>
+          </div>
+        </div>
+        <Link
+          href="/frilens"
+          className="shrink-0 rounded-full border-[1.5px] border-ink bg-surface px-5 py-2.5 font-display text-sm font-semibold shadow-[3px_3px_0_#1b1b1b] transition hover:bg-ink/5"
+        >
+          Zistiť viac
         </Link>
       </div>
 
