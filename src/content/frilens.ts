@@ -7,10 +7,10 @@
 // inak release assety vrátia každému okrem majiteľa chybu 404.
 
 export const frilens = {
-  version: '0.1.4-alpha',
+  version: '0.1.5-alpha',
 
-  apk: 'https://github.com/Robindhuil/FriLens/releases/download/v0.1.4-alpha/FriLens-0.1.4-alpha.apk',
-  apkMb: 42,
+  apk: 'https://github.com/Robindhuil/FriLens/releases/download/v0.1.5-alpha/FriLens-0.1.5-alpha.apk',
+  apkMb: 40,
 
   minAndroid: '7.1',
 
