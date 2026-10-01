@@ -1,18 +1,31 @@
-import { readdir } from 'fs/promises';
+import { readdir, readFile } from 'fs/promises';
 import path from 'path';
 
 /**
- * Locates the Unity build's files, wherever they are hosted.
+ * Locates a Unity build's files, wherever they are hosted. There are two builds:
+ * the game (FriWorld) and the Navigator, each with its own folder and base URL.
  *
- * GAME_BASE_URL unset (local dev) — files come from public/game, served by Next.
- * GAME_BASE_URL set (production)  — files live on object storage (Cloudflare R2),
- *                                   because the build is far too large for Vercel.
+ * Base URL unset (local dev) — files come from public/<folder>, served by Next.
+ * Base URL set (production)  — files live on object storage (Cloudflare R2),
+ *                              because the builds are far too large for Vercel.
  *
  * Server-side only: the browser never sees the raw base, just finished URLs.
  */
-export const EXTERNAL_BASE = process.env.GAME_BASE_URL?.replace(/\/+$/, '') ?? '';
+const source = (baseUrl: string | undefined, folder: string) => ({
+  external: baseUrl?.replace(/\/+$/, '') ?? '',
+  folder,
+  dir: path.join(process.cwd(), 'public', folder),
+});
 
-const BUILD_DIR = path.join(process.cwd(), 'public', 'game', 'Build');
+export const BUILDS = {
+  game: source(process.env.GAME_BASE_URL, 'game'),
+  navigator: source(process.env.NAVIGATOR_BASE_URL, 'navigator'),
+};
+
+export type BuildName = keyof typeof BUILDS;
+
+/** The game's base URL on object storage; empty in local dev. */
+export const EXTERNAL_BASE = BUILDS.game.external;
 
 export type BuildUrls = {
   loaderUrl: string;
@@ -71,32 +84,61 @@ function urlsFrom(files: string[], base: string): BuildUrls | string {
  * hosted build ships a manifest.json alongside it. Regenerate and re-upload it
  * after a build swap: `npm run game:manifest`.
  */
-async function resolveExternal(): Promise<BuildUrls | string> {
+async function resolveExternal(base: string): Promise<BuildUrls | string> {
   let res: Response;
   try {
-    res = await fetch(`${EXTERNAL_BASE}/manifest.json`, { cache: 'no-store' });
+    res = await fetch(`${base}/manifest.json`, { cache: 'no-store' });
   } catch {
-    return 'Úložisko s hrou je nedostupné. Skús to prosím o chvíľu znova.';
+    return 'Úložisko so zostavou je nedostupné. Skús to prosím o chvíľu znova.';
   }
   if (!res.ok) {
     return `Na úložisku chýba manifest.json (${res.status}). Nahraj ho spolu s buildom.`;
   }
   try {
-    return urlsFrom((await res.json()) as string[], EXTERNAL_BASE);
+    return urlsFrom((await res.json()) as string[], base);
   } catch {
-    return 'Manifest hry je poškodený.';
+    return 'Manifest zostavy je poškodený.';
   }
 }
 
-async function resolveLocal(): Promise<BuildUrls | string> {
+async function resolveLocal(dir: string, folder: string): Promise<BuildUrls | string> {
   try {
-    return urlsFrom(await readdir(BUILD_DIR), '/game');
+    return urlsFrom(await readdir(path.join(dir, 'Build')), `/${folder}`);
   } catch {
-    return 'Priečinok so zostavou sa nenašiel. Očakávam súbory v public/game/Build.';
+    return `Priečinok so zostavou sa nenašiel. Očakávam súbory v public/${folder}/Build.`;
   }
 }
 
 /** Resolves the current build, or a Slovak message describing what is wrong. */
-export function resolveBuild(): Promise<BuildUrls | string> {
-  return EXTERNAL_BASE ? resolveExternal() : resolveLocal();
+export function resolveBuild(name: BuildName = 'game'): Promise<BuildUrls | string> {
+  const build = BUILDS[name];
+  return build.external ? resolveExternal(build.external) : resolveLocal(build.dir, build.folder);
+}
+
+/**
+ * The room codes the Navigator build can fly to. Its build ships them in
+ * rooms.json beside index.html, so the list always matches what is uploaded.
+ */
+export async function resolveNavigatorRooms(): Promise<string[] | string> {
+  const { external, dir } = BUILDS.navigator;
+  let text: string;
+  try {
+    if (external) {
+      const res = await fetch(`${external}/rooms.json`, { cache: 'no-store' });
+      if (!res.ok) return `Na úložisku chýba rooms.json Navigatora (${res.status}).`;
+      text = await res.text();
+    } else {
+      text = await readFile(path.join(dir, 'rooms.json'), 'utf8');
+    }
+  } catch {
+    return 'Navigator ešte nie je nahratý — chýba jeho zostava so zoznamom miestností.';
+  }
+
+  try {
+    const rooms: unknown = JSON.parse(text);
+    if (Array.isArray(rooms) && rooms.every((r) => typeof r === 'string')) return rooms;
+  } catch {
+    /* falls through */
+  }
+  return 'Zoznam miestností Navigatora je poškodený.';
 }

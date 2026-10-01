@@ -33,6 +33,22 @@ npm run game:upload -- --dry
 npm run game:upload
 ```
 
+## Navigator
+
+Druhý Unity build — prelet budovou k miestnosti (`/navigator` → `/navigate/[kód]`). Zatiaľ
+beží **len lokálne**:
+
+| | |
+|---|---|
+| build v Unity | `Navigator → Build Web` v repe FriWorldu, výstup `Builds/Navigator/Web` |
+| build v repe | skopírovať celý výstup do `public/navigator/`, v `.gitignore` |
+| zoznam miestností | `rooms.json` vedľa `index.html`, zapíše ho `Build Web` |
+| premenná na Verceli | `NAVIGATOR_BASE_URL` — ešte nenastavená, na Verceli preto stránka hlási, že Navigator nie je nahratý |
+
+Na R2 ho nedávaj do bucketu `friworld-web`: `game:upload` zrkadlí celý bucket a čokoľvek
+mimo `public/game` by zmazal. Potrebuje vlastný bucket alebo upload obmedzený na prefix,
+a na úložisku `manifest.json` zo zoznamu súborov `Build/` ako hra.
+
 Pozor na dva rôzne súbory menom `manifest.json`: `public/game/manifest.json` je zoznam
 súborov WebGL buildu pre `/api/game`, kým `releases/manifest.json` v repe launchera je
 kontrakt o vydaní desktopu. Nemajú spolu nič spoločné.

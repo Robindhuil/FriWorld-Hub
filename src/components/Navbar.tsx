@@ -12,6 +12,7 @@ const links = [
   { href: '/discussions', label: 'Diskusia' },
   { href: '/about', label: 'O hre' },
   { href: '/frilens', label: 'FriLens' },
+  { href: '/navigator', label: 'Navigator' },
 ];
 
 export default function Navbar() {

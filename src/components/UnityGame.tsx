@@ -4,7 +4,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 /**
- * Robust wrapper around a Unity 6 "Web" build living in /public/game.
+ * Robust wrapper around a Unity 6 "Web" build — the game living in /public/game
+ * by default; the Navigator passes its own api, texts and onReady.
  *
  * Handles the common failure modes of embedding a Unity WebGL build in React:
  *  - non-idempotent createUnityInstance (single init, hard guard)
@@ -18,8 +19,9 @@ import { useRouter } from 'next/navigation';
  * change is needed when the build name changes.
  */
 
-type UnityInstance = {
+export type UnityInstance = {
   SetFullscreen: (value: number) => void;
+  SendMessage: (objectName: string, methodName: string, value?: string | number) => void;
   Quit: () => Promise<void>;
   // Unity exposes the emscripten Module on the instance. QuitCleanup() is the
   // function Unity invokes when the game calls Application.Quit().
@@ -56,6 +58,22 @@ const PRODUCT = {
 
 type Status = 'loading' | 'ready' | 'error';
 
+/** Everything defaults to the game; the Navigator page overrides it. */
+type Props = {
+  /** Route that answers with the build's file URLs. */
+  api?: string;
+  product?: typeof PRODUCT;
+  title?: string;
+  loadingText?: string;
+  errorTitle?: string;
+  /** Where the back button, the error screen and an in-game quit go. */
+  homeHref?: string;
+  homeLabel?: string;
+  homeTitle?: string;
+  /** Runs once the build has started, e.g. to tell it what to do. */
+  onReady?: (instance: UnityInstance) => void;
+};
+
 /**
  * Multithreaded Unity builds need SharedArrayBuffer, which browsers expose only
  * to secure, cross-origin isolated documents. Unity's own failure message blames
@@ -77,7 +95,17 @@ function multithreadingIssue(): string | null {
   return 'Tvoj prehliadač nepodporuje viacvláknové spracovanie, ktoré hra potrebuje. Skús aktuálnu verziu Chrome, Edge alebo Firefoxu.';
 }
 
-export default function UnityGame() {
+export default function UnityGame({
+  api = '/api/game',
+  product = PRODUCT,
+  title = 'FriWorld',
+  loadingText = 'Načítavam fakultu…',
+  errorTitle = 'Hru sa nepodarilo spustiť',
+  homeHref = '/',
+  homeLabel = 'Domov',
+  homeTitle = 'Späť na úvod',
+  onReady,
+}: Props) {
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const instanceRef = useRef<UnityInstance | null>(null);
@@ -129,7 +157,7 @@ export default function UnityGame() {
         codeUrl: manifest.codeUrl,
         ...(manifest.workerUrl ? { workerUrl: manifest.workerUrl } : {}),
         streamingAssetsUrl: manifest.streamingAssetsUrl,
-        ...PRODUCT,
+        ...product,
         // Cap device pixel ratio so high-DPI screens don't blow the render
         // target up to 2x–3x and tank the framerate.
         devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
@@ -169,11 +197,12 @@ export default function UnityGame() {
               if (cancelled || intentionalQuitRef.current) return;
               intentionalQuitRef.current = true;
               instanceRef.current = null;
-              router.push('/');
+              router.push(homeHref);
             };
           }
 
           setStatus('ready');
+          onReady?.(instance);
         })
         .catch((err) => {
           if (!cancelled) {
@@ -209,7 +238,7 @@ export default function UnityGame() {
 
     // Ask the server which build files exist, then load them. This makes build
     // swaps drop-in: any file names work, no code change required.
-    fetch('/api/game', { cache: 'no-store' })
+    fetch(api, { cache: 'no-store' })
       .then(async (res) => {
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
@@ -235,7 +264,7 @@ export default function UnityGame() {
       if (cancelled || intentionalQuitRef.current) return;
       intentionalQuitRef.current = true;
       instanceRef.current = null;
-      router.push('/');
+      router.push(homeHref);
     };
     canvas.addEventListener('webglcontextlost', onContextLost);
 
@@ -261,8 +290,8 @@ export default function UnityGame() {
     } catch {
       /* ignore */
     }
-    router.push('/');
-  }, [router]);
+    router.push(homeHref);
+  }, [router, homeHref]);
 
   const toggleFullscreen = useCallback(() => {
     instanceRef.current?.SetFullscreen(1);
@@ -296,12 +325,12 @@ export default function UnityGame() {
         <button
           onClick={exitToHome}
           className="pointer-events-auto absolute left-4 top-4 flex items-center gap-1.5 rounded-full bg-white/90 px-4 py-1.5 text-sm font-bold text-ink shadow-sm backdrop-blur transition hover:bg-white"
-          title="Späť na úvod"
+          title={homeTitle}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M15 18l-6-6 6-6" />
           </svg>
-          Domov
+          {homeLabel}
         </button>
 
         {status === 'ready' && (
@@ -324,8 +353,8 @@ export default function UnityGame() {
             <span className="inline-grid h-14 w-14 -rotate-6 place-items-center rounded-2xl bg-accent font-display text-3xl font-bold text-ink">
               F
             </span>
-            <h1 className="mt-4 font-display text-3xl font-bold text-ink">FriWorld</h1>
-            <p className="mt-1 text-sm font-bold text-ink/45">{message ?? 'Načítavam fakultu…'}</p>
+            <h1 className="mt-4 font-display text-3xl font-bold text-ink">{title}</h1>
+            <p className="mt-1 text-sm font-bold text-ink/45">{message ?? loadingText}</p>
           </div>
           <div className="h-2.5 w-64 overflow-hidden rounded-full bg-ink/10">
             <div
@@ -344,7 +373,7 @@ export default function UnityGame() {
             <div className="mx-auto grid h-12 w-12 -rotate-6 place-items-center rounded-2xl bg-accent-soft text-2xl">
               😅
             </div>
-            <p className="mt-4 font-display text-lg font-bold text-ink">Hru sa nepodarilo spustiť</p>
+            <p className="mt-4 font-display text-lg font-bold text-ink">{errorTitle}</p>
             <p className="mt-2 text-sm leading-relaxed text-ink/50">{message}</p>
             <div className="mt-6 flex justify-center gap-3">
               <button
@@ -354,7 +383,7 @@ export default function UnityGame() {
                 Skúsiť znova
               </button>
               <button
-                onClick={() => router.push('/')}
+                onClick={() => router.push(homeHref)}
                 className="rounded-full border-2 border-ink/15 px-6 py-2.5 text-sm font-bold text-ink/70 transition hover:border-ink/30 hover:text-ink"
               >
                 Späť domov
