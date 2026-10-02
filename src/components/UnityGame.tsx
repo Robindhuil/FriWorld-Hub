@@ -72,8 +72,14 @@ type Props = {
   homeTitle?: string;
   /** Runs once the build has started, e.g. to tell it what to do. */
   onReady?: (instance: UnityInstance) => void;
-  /** Extra controls over the running build; give interactive parts pointer-events-auto. */
-  overlay?: ReactNode;
+  /** Controls in a strip under the stage, which shrinks to make room for it. */
+  controlsBar?: ReactNode;
+  /** Height of that strip in px; 0 keeps the stage full height. */
+  controlsBarHeight?: number;
+  /** The floating fullscreen button; off when the controls carry their own. */
+  fullscreenButton?: boolean;
+  /** Replaces going to homeHref, e.g. to close a window opened for this. */
+  onHome?: () => void;
 };
 
 /**
@@ -107,7 +113,10 @@ export default function UnityGame({
   homeLabel = 'Domov',
   homeTitle = 'Späť na úvod',
   onReady,
-  overlay,
+  controlsBar,
+  controlsBarHeight = 0,
+  fullscreenButton = true,
+  onHome,
 }: Props) {
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -287,6 +296,10 @@ export default function UnityGame({
   }, []);
 
   const exitToHome = useCallback(async () => {
+    if (onHome) {
+      onHome();
+      return;
+    }
     intentionalQuitRef.current = true;
     try {
       await instanceRef.current?.Quit();
@@ -294,7 +307,7 @@ export default function UnityGame({
       /* ignore */
     }
     router.push(homeHref);
-  }, [router, homeHref]);
+  }, [router, homeHref, onHome]);
 
   const toggleFullscreen = useCallback(() => {
     instanceRef.current?.SetFullscreen(1);
@@ -307,10 +320,16 @@ export default function UnityGame({
   return (
     <div className="fixed inset-0 bg-[#141414]">
       {/* Letterboxed 16:9 stage — preserves aspect ratio, no stretching. */}
-      <div className="absolute inset-0 flex items-center justify-center">
+      <div
+        className="absolute inset-x-0 top-0 flex items-center justify-center"
+        style={{ bottom: controlsBarHeight }}
+      >
         <div
           className="relative bg-black"
-          style={{ width: 'min(100vw, calc(100vh * 16 / 9))', aspectRatio: '16 / 9' }}
+          style={{
+            width: `min(100vw, calc((100vh - ${controlsBarHeight}px) * 16 / 9))`,
+            aspectRatio: '16 / 9',
+          }}
         >
           <canvas
             ref={canvasRef}
@@ -336,9 +355,7 @@ export default function UnityGame({
           {homeLabel}
         </button>
 
-        {status === 'ready' && overlay}
-
-        {status === 'ready' && (
+        {status === 'ready' && fullscreenButton && (
           <button
             onClick={toggleFullscreen}
             className="pointer-events-auto absolute bottom-4 right-4 rounded-full bg-white/90 p-2.5 text-ink shadow-sm backdrop-blur transition hover:bg-white"
@@ -350,6 +367,13 @@ export default function UnityGame({
           </button>
         )}
       </div>
+
+      {/* Controls strip under the stage, so they never cover the picture. */}
+      {controlsBarHeight > 0 && (
+        <div className="absolute inset-x-0 bottom-0" style={{ height: controlsBarHeight }}>
+          {status === 'ready' && controlsBar}
+        </div>
+      )}
 
       {/* Loading overlay */}
       {status === 'loading' && (

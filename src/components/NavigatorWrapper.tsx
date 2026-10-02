@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import type { UnityInstance } from './UnityGame';
+import { NAVIGATOR_BAR, NAVIGATOR_WINDOW } from '@/lib/navigator-window';
 
 const UnityGame = dynamic(() => import('./UnityGame'), { ssr: false });
 
@@ -30,11 +31,12 @@ const clock = (seconds: number) => {
 const speedLabel = (s: number) => `${String(s).replace('.', ',')}×`;
 
 /**
- * The Navigator build, flying to one room, with controls like a video. Its
- * NavigatorController sits on the scene object "Navigator": it starts on Go and
- * takes Play, Pause, Seek and SetSpeed. What the flight does comes back as window
- * events (NavigatorPage.jslib in the Unity project): navigator:ready {duration},
- * navigator:time {time, playing}, navigator:ended and navigator:error {code}.
+ * The Navigator build, flying to one room, with controls like a video in a thin
+ * strip under the picture. Its NavigatorController sits on the scene object
+ * "Navigator": it starts on Go and takes Play, Pause, Seek and SetSpeed. What the
+ * flight does comes back as window events (NavigatorPage.jslib in the Unity
+ * project): navigator:ready {duration}, navigator:time {time, playing},
+ * navigator:ended and navigator:error {code}.
  */
 export default function NavigatorWrapper({ code }: { code: string }) {
   const instanceRef = useRef<UnityInstance | null>(null);
@@ -47,8 +49,15 @@ export default function NavigatorWrapper({ code }: { code: string }) {
   const [ended, setEnded] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [error, setError] = useState<string | null>(null);
+  // Known only in the browser: opened as the room window from the Navigator page,
+  // and whether this page can go fullscreen at all (an iPhone cannot).
+  const [inWindow, setInWindow] = useState(false);
+  const [canFullscreen, setCanFullscreen] = useState(false);
 
   useEffect(() => {
+    setInWindow(window.name === NAVIGATOR_WINDOW && !!window.opener);
+    setCanFullscreen(document.fullscreenEnabled);
+
     const onReady = (e: Event) => {
       setDuration((e as CustomEvent<{ duration: number }>).detail.duration);
       setTime(0);
@@ -109,19 +118,25 @@ export default function NavigatorWrapper({ code }: { code: string }) {
     send('SetSpeed', s);
   };
 
-  const controls = error ? (
-    <div className="pointer-events-auto absolute inset-x-4 bottom-4 mx-auto max-w-md rounded-2xl bg-white/90 px-5 py-4 text-center text-sm font-bold text-ink shadow-sm backdrop-blur">
+  // The whole page, not Unity's canvas alone, so the controls stay under the picture.
+  const toggleFullscreen = () => {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    else document.documentElement.requestFullscreen().catch(() => {});
+  };
+
+  const bar = error ? (
+    <p className="flex h-full items-center justify-center px-4 text-center text-xs font-bold text-white/75">
       {error}
-    </div>
+    </p>
   ) : duration > 0 ? (
-    <div className="pointer-events-auto absolute bottom-4 left-4 right-16 flex items-center gap-3 rounded-full bg-white/90 py-1.5 pl-1.5 pr-2 shadow-sm backdrop-blur sm:left-1/2 sm:right-auto sm:w-[34rem] sm:-translate-x-1/2">
+    <div className="flex h-full items-center gap-2 px-2 sm:gap-3 sm:px-3">
       <button
         onClick={togglePlay}
-        className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-accent text-ink transition hover:brightness-95"
+        className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-accent text-ink transition hover:brightness-95"
         aria-label={playing ? 'Pauza' : ended ? 'Znova' : 'Prehrať'}
         title={playing ? 'Pauza' : ended ? 'Znova' : 'Prehrať'}
       >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
           {playing ? (
             <path d="M6 5h4v14H6zM14 5h4v14h-4z" />
           ) : ended ? (
@@ -142,23 +157,36 @@ export default function NavigatorWrapper({ code }: { code: string }) {
         onPointerUp={() => (seekingRef.current = false)}
         onPointerCancel={() => (seekingRef.current = false)}
         onChange={(e) => seek(Number(e.target.value))}
-        className="h-2 min-w-0 flex-1 cursor-pointer"
-        style={{ accentColor: '#1b1b1b' }}
+        className="h-1 min-w-0 flex-1 cursor-pointer"
+        style={{ accentColor: 'var(--color-accent)' }}
         aria-label="Pretáčanie"
       />
 
-      <span className="shrink-0 text-xs font-bold tabular-nums text-ink/70">
+      <span className="shrink-0 text-[11px] font-bold tabular-nums text-white/65">
         {clock(time)} / {clock(duration)}
       </span>
 
       <button
         onClick={nextSpeed}
-        className="h-11 min-w-[3.25rem] shrink-0 rounded-full border-[1.5px] border-ink/15 px-2.5 text-sm font-bold text-ink transition hover:border-ink/30"
+        className="h-7 min-w-[2.5rem] shrink-0 rounded-full border border-white/20 px-1.5 text-[11px] font-bold text-white/80 transition hover:border-white/45"
         aria-label="Rýchlosť"
         title="Rýchlosť"
       >
         {speedLabel(speed)}
       </button>
+
+      {canFullscreen && (
+        <button
+          onClick={toggleFullscreen}
+          className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-white/75 transition hover:bg-white/10"
+          aria-label="Celá obrazovka"
+          title="Celá obrazovka"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+          </svg>
+        </button>
+      )}
     </div>
   ) : null;
 
@@ -170,13 +198,16 @@ export default function NavigatorWrapper({ code }: { code: string }) {
       loadingText="Hľadám cestu…"
       errorTitle="Navigáciu sa nepodarilo spustiť"
       homeHref="/navigator"
-      homeLabel="Miestnosti"
-      homeTitle="Späť na zoznam miestností"
+      homeLabel={inWindow ? 'Zavrieť' : 'Miestnosti'}
+      homeTitle={inWindow ? 'Zavrieť okno' : 'Späť na zoznam miestností'}
+      onHome={inWindow ? () => window.close() : undefined}
       onReady={(instance: UnityInstance) => {
         instanceRef.current = instance;
         instance.SendMessage('Navigator', 'Go', code);
       }}
-      overlay={controls}
+      controlsBar={bar}
+      controlsBarHeight={NAVIGATOR_BAR}
+      fullscreenButton={false}
     />
   );
 }

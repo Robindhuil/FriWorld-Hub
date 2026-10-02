@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import NavigatorRoomLink from '@/components/NavigatorRoomLink';
 import { resolveNavigatorRooms } from '@/lib/game-build';
 
 export const metadata: Metadata = {
@@ -27,7 +28,7 @@ export default async function NavigatorPage() {
       <div className="mb-10 text-center">
         <h1 className="font-display text-4xl font-bold tracking-tight">Navigator</h1>
         <p className="mt-2 text-base text-ink/50">
-          Vyber miestnosť a kamera ťa k nej prevedie od recepcie. Otvorí sa v novom okne.
+          Vyber miestnosť a kamera ťa k nej prevedie od recepcie. Na počítači sa otvorí v samostatnom okne.
         </p>
       </div>
 
@@ -42,15 +43,11 @@ export default async function NavigatorPage() {
               <h2 className="mb-2.5 font-display text-sm font-bold text-ink/45">{floor}</h2>
               <div className="flex flex-wrap gap-2">
                 {codes.map((code) => (
-                  <a
+                  <NavigatorRoomLink
                     key={code}
-                    href={`/navigate/${code}`}
-                    target="_blank"
-                    rel="noopener"
+                    code={code}
                     className="rounded-full border-[1.5px] border-ink bg-surface px-4 py-1.5 font-mono text-sm font-bold shadow-[2px_2px_0_#1b1b1b] transition hover:bg-accent"
-                  >
-                    {code}
-                  </a>
+                  />
                 ))}
               </div>
             </section>
