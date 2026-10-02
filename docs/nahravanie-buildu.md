@@ -42,8 +42,10 @@ Druhý Unity build — prelet budovou k miestnosti (`/navigator` → `/navigate/
 | build v Unity | `Navigator → Build Web` v repe FriWorldu, výstup `Builds/Navigator/Web` |
 | build v repe | celý výstup do `public/navigator/` (starý obsah najprv zmazať), v `.gitignore` |
 | zoznam miestností | `rooms.json` vedľa `index.html`, zapíše ho `Build Web` |
-| R2 bucket | **vlastný**, predvolene `friworld-navigator` (`R2_NAVIGATOR_BUCKET`); verejná adresa r2.dev a CORS ako bucket hry: `GET` z akejkoľvek domény |
-| premenná na Verceli | `NAVIGATOR_BASE_URL` = verejná adresa toho bucketu; prejaví sa až po redeployi |
+| R2 bucket | **vlastný**, meno pre skript v `R2_NAVIGATOR_BUCKET` (predvolene `friworld-navigator`) |
+| verejná adresa | `https://pub-e5982b272187470199cbcd88b5f1f5a0.r2.dev` |
+| CORS bucketu | `GET`, `HEAD` z `https://fri-world-hub.vercel.app` a `http://localhost:3000` — iná doména Hubu (vlastná, preview nasadenia) sa musí pridať, inak sa Navigator nestiahne |
+| premenná na Verceli | `NAVIGATOR_BASE_URL` = verejná adresa; prejaví sa až po redeployi |
 
 ```bash
 npm run navigator:upload -- --dry
