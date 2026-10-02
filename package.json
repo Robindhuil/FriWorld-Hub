@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "game:manifest": "node scripts/gen-game-manifest.mjs",
-    "game:upload": "node scripts/upload-game.mjs"
+    "game:upload": "node scripts/upload-game.mjs",
+    "navigator:upload": "node scripts/upload-navigator.mjs"
   },
   "dependencies": {
     "next": "16.2.9",
