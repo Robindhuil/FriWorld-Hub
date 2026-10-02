@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
 /**
@@ -72,6 +72,8 @@ type Props = {
   homeTitle?: string;
   /** Runs once the build has started, e.g. to tell it what to do. */
   onReady?: (instance: UnityInstance) => void;
+  /** Extra controls over the running build; give interactive parts pointer-events-auto. */
+  overlay?: ReactNode;
 };
 
 /**
@@ -105,6 +107,7 @@ export default function UnityGame({
   homeLabel = 'Domov',
   homeTitle = 'Späť na úvod',
   onReady,
+  overlay,
 }: Props) {
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -332,6 +335,8 @@ export default function UnityGame({
           </svg>
           {homeLabel}
         </button>
+
+        {status === 'ready' && overlay}
 
         {status === 'ready' && (
           <button
